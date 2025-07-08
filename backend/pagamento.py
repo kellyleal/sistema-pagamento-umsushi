@@ -1,55 +1,51 @@
-from dataclasses import dataclass
-
-@dataclass
-class itemMenu:
-    nome: str
-    preco: float
-
-menu = [ 
-    itemMenu("ovo de salmão fresco", 75.90),
-    itemMenu("ovo de salmão maçaricado", 75.90), 
-    itemMenu("hot balls - queijo", 22.99)
-    ]
-
-
+# Use o mesmo arquivo onde a classe Carrinho está definida
 
 class Carrinho:
-    def __init__(self, usuarioId: str):
-        self.usuarioId = usuarioId
-        self.pedidos = []
+    def __init__(self, usuario_id: str):
+        self.usuario_id = usuario_id
+        # Usa um DICIONÁRIO para armazenar o item e sua quantidade
+        self._pedidos = {} 
 
-    def adicionar_Item(self, item):
-        self.pedidos.append(item)
-    
-    def remover_Item(self, item):
-        if item in self.pedidos:
-            self.pedidos.remove(item)
+    @property
+    def itens(self):
+        """Retorna uma lista dos itens no carrinho para visualização."""
+        return list(self._pedidos.items())
 
-    def total_Pedido(self) -> float:
-         return sum(item.preco for item in self.pedidos) 
+    def adicionar_item(self, item: ItemMenu, quantidade: int = 1):
+        """Adiciona um item ao carrinho ou incrementa sua quantidade."""
+        if quantidade <= 0:
+            print("Quantidade deve ser positiva.")
+            return
 
-   
-            
-class Checkout:
-    def __init__(self, carrinho:Carrinho, metodo: str):
-        self.carrinho = carrinho
-        self.metodo = metodo
+        # Se o item já existe, soma a quantidade. Senão, adiciona.
+        self._pedidos[item] = self._pedidos.get(item, 0) + quantidade
+        print(f"{quantidade}x '{item.nome}' adicionado(s) ao carrinho.")
 
-    def pagar(self):
-        total = self.carrinho.total_Pedido()
-        print("Pedido total de:", total, "para", self.carrinho.usuarioId)
+    def remover_item(self, item: ItemMenu, quantidade: int = 1):
+        """Remove uma certa quantidade de um item ou o remove completamente."""
+        if item not in self._pedidos:
+            print(f"'{item.nome}' não está no carrinho.")
+            return
 
-        if(self.metodo == "Cartão"):
-            print("Insira o numero do seu cartão")
-            self.cartao = input()
-        elif(self.metodo == "Pix"): 
-            print("Código de barras para pagar com pix: ||l|l|l|||||ll|l|l|ll|l||ll|")
+        if quantidade <= 0:
+            print("Quantidade deve ser positiva.")
+            return
+
+        # Diminui a quantidade
+        self._pedidos[item] -= quantidade
+
+        # Se a quantidade for zerada ou negativa, remove o item do carrinho
+        if self._pedidos[item] <= 0:
+            del self._pedidos[item]
+            print(f"Item '{item.nome}' removido do carrinho.")
+        else:
+            print(f"{quantidade}x '{item.nome}' removido(s). Restam: {self._pedidos[item]}.")
 
 
-
-carrinho1 = Carrinho("Usuario João")
-carrinho1.adicionar_Item(menu[0])
-carrinho1.adicionar_Item(menu[2])
-
-checkout1 = Checkout(carrinho1, "Pix")
-checkout1.pagar()
+    def total_pedido(self) -> float:
+        """Calcula o total considerando o preço de cada item e sua quantidade."""
+        if not self._pedidos:
+            return 0.0
+        
+        total = sum(item.preco * quantidade for item, quantidade in self._pedidos.items())
+        return total
